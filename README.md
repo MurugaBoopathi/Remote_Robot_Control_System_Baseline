@@ -47,19 +47,39 @@ robot-management-app/
 ├── index.html
 ├── package.json
 ├── vite.config.js
+├── babel.config.cjs
+├── jest.config.cjs
 ├── src/
 │   ├── App.jsx
 │   ├── Layout.jsx
 │   ├── main.jsx
-│   ├── styles.css
-│   ├── health.css
-│   ├── predictions.css
 │   ├── api/
 │   │   └── robotApiClient.js
+│   ├── assets/
 │   ├── components/
+│   │   ├── HealthChart.jsx
+│   │   ├── JointDetailPanel.jsx
+│   │   ├── JointVisualizer.jsx
 │   │   ├── MetricCard.jsx
+│   │   ├── PathMap.jsx
 │   │   ├── PredictionCard.jsx
 │   │   ├── RobotCard.jsx
+│   │   ├── Tabs.jsx
+│   │   └── __tests__/
+│   │       ├── HealthChart.test.jsx
+│   │       ├── JointDetailPanel.test.jsx
+│   │       ├── JointVisualizer.test.jsx
+│   │       ├── MetricCard.test.jsx
+│   │       ├── PathMap.test.jsx
+│   │       ├── PredictionCard.test.jsx
+│   │       ├── RobotCard.test.jsx
+│   │       └── Tabs.test.jsx
+│   ├── data/
+│   │   ├── HealthLog_export.csv
+│   │   ├── JointData_export.csv
+│   │   ├── PathLog_export.csv
+│   │   ├── Robot_export.csv
+│   │   └── UpdateLog_export.csv
 │   ├── pages/
 │   │   ├── Dashboard.jsx
 │   │   ├── Health.jsx
@@ -67,15 +87,36 @@ robot-management-app/
 │   │   ├── Predictions.jsx
 │   │   ├── Robots.jsx
 │   │   ├── TeleOperation.jsx
-│   │   ├── Updates.jsx
+│   │   └── Updates.jsx
+│   └── styles/
+│       ├── health.css
+│       ├── predictions.css
+│       └── styles.css
+├── public/
+│   ├── Robot_export.csv
+│   └── assets/
+├── README.md
+```
+
 ## Technologies Used
 - React
 - Vite
 - Chart.js & react-chartjs-2
 - Lucide React
-- Tailwind CSS
+- Tailwind CSS (utility classes)
 - Custom CSS
 - PapaParse (CSV parsing)
+- Jest (unit testing)
+- @testing-library/react & @testing-library/jest-dom (React component testing)
+- Babel (for Jest and ES module support)
+
+## Testing
+
+Basic test cases for all components are located in `src/components/__tests__/`.
+To run all tests:
+```bash
+npm test
+```
 
 ## How to Contribute
 1. Fork the repository on GitHub.
