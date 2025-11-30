@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { base44 } from '../api/base44Client'
+import { robotApi } from '../api/robotApiClient'
 
 export default function Updates(){
   const [robotId,setRobotId] = useState(1)
   const [version,setVersion] = useState('v1.0.0')
-  const { data: jobs=[] , refetch } = useQuery({ queryKey:['updates'], queryFn: ()=> base44.entities.UpdateJob.list(100) })
-  const schedule = async ()=>{ await base44.entities.UpdateJob.schedule(robotId, version); refetch() }
+  const { data: jobs=[] , refetch } = useQuery({ queryKey:['updates'], queryFn: ()=> robotApi.entities.UpdateJob.list(100) })
+  const schedule = async ()=>{ await robotApi.entities.UpdateJob.schedule(robotId, version); refetch() }
   return (
     <div>
       <h2>Updates</h2>

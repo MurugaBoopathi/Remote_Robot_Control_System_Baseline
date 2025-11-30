@@ -1,15 +1,10 @@
-# Base44 Robot Management System
+# Remote Robot Management System
 
-This project is a modern web dashboard for monitoring, controlling, and analyzing the health and performance of robots in the Base44 fleet. Built with React, Vite, Chart.js, Lucide React, and custom CSS, it provides real-time insights and predictive analytics for robot operations.
+This project is a modern web dashboard for monitoring, controlling, and analyzing the health and performance of robots in the remote fleet. Built with React, Vite, Chart.js, Lucide React, and custom CSS, it provides real-time insights and predictive analytics for robot operations.
 
 ## Features
 
 ### 1. Dashboard Overview
-- **AI Predictions:** View predictive analytics and forecasting for robot health, battery, maintenance, and usage.
-- **Health Monitoring:** Track system health, diagnostics, and alerts for all robots.
-- **Cycle Counter:** See total cycles for each robot in the fleet.
-
-### 2. Health Page
 - **Metric Cards:** Display average battery, temperature, CPU usage, and total alerts.
 - **Charts Tab:** Visualize battery, temperature, CPU, and memory usage over time with interactive charts.
 - **Log History Tab:** Browse recent logs for each robot, including battery, temperature, CPU, memory, cycles, and alerts.
@@ -48,7 +43,7 @@ This project is a modern web dashboard for monitoring, controlling, and analyzin
 ## Project Structure
 
 ```
-base44_clone/
+robot-management-app/
 ├── index.html
 ├── package.json
 ├── vite.config.js
@@ -60,7 +55,7 @@ base44_clone/
 │   ├── health.css
 │   ├── predictions.css
 │   ├── api/
-│   │   └── base44Client.js
+│   │   └── robotApiClient.js
 │   ├── components/
 │   │   ├── MetricCard.jsx
 │   │   ├── PredictionCard.jsx
@@ -73,13 +68,6 @@ base44_clone/
 │   │   ├── Robots.jsx
 │   │   ├── TeleOperation.jsx
 │   │   ├── Updates.jsx
-│   ├── data/
-│   │   ├── HealthLog_export.csv
-│   │   ├── JointData_export.csv
-│   │   ├── PathLog_export.csv
-│   │   ├── UpdateLog_export.csv
-```
-
 ## Technologies Used
 - React
 - Vite

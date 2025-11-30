@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react'
-import { base44 } from '../api/base44Client'
+import { robotApi } from '../api/robotApiClient'
 
 export default function TeleOperation(){
   const [robotId,setRobotId] = useState(1)
   const [speed,setSpeed] = useState(0.5)
-  const send = async (action)=>{ await base44.entities.Commands.send(robotId, action, { speed }) }
+  const send = async (action)=>{ await robotApi.entities.Commands.send(robotId, action, { speed }) }
   return (
     <div>
       <h2>Tele-Operation</h2>
