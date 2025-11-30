@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Monitoring - Robot Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, rgba(238, 242, 255, 0.3) 50%, #f1f5f9 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+    
+    .container { max-width: 1280px; margin: 0 auto; padding: 1.5rem; }
+    
+    /* Header */
+    .header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+    .header-left { display: flex; align-items: center; gap: 1rem; }
+    .back-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: none; background: transparent; cursor: pointer; }
+    .back-btn:hover { background: #f1f5f9; }
+    .header-title { font-size: 1.5rem; font-weight: 700; color: #1e293b; }
+    .header-subtitle { font-size: 0.875rem; color: #64748b; }
+    .header-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    
+    /* Select */
+    .select { height: 40px; padding: 0 12px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; cursor: pointer; outline: none; }
+    .select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+    .select-lg { width: 192px; }
+    .select-sm { width: 128px; }
+    
+    /* Button */
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 6px; border: 1px solid #e2e8f0; background: white; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+    
+    /* Cards */
+    .card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+    
+    /* Metric Cards */
+    .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (min-width: 1024px) { .metric-grid { grid-template-columns: repeat(4, 1fr); } }
+    
+    .metric-card { padding: 1rem; border-radius: 12px; transition: box-shadow 0.2s; }
+    .metric-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+    .metric-card-emerald { background: #ecfdf5; }
+    .metric-card-amber { background: #fffbeb; }
+    .metric-card-red { background: #fef2f2; }
+    .metric-card-slate { background: #f8fafc; }
+    
+    .metric-icon { padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .metric-icon-emerald { background: #d1fae5; }
+    .metric-icon-amber { background: #fef3c7; }
+    .metric-icon-red { background: #fee2e2; }
+    .metric-icon-slate { background: #f1f5f9; }
+    
+    .metric-value { font-size: 1.25rem; font-weight: 700; }
+    .metric-value-emerald { color: #059669; }
+    .metric-value-amber { color: #d97706; }
+    .metric-value-red { color: #dc2626; }
+    .metric-value-slate { color: #475569; }
+    
+    /* Tabs */
+    .tabs-list { display: inline-flex; padding: 4px; background: rgba(255, 255, 255, 0.8); border-radius: 8px; margin-bottom: 1rem; }
+    .tab-btn { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border: none; background: transparent; border-radius: 6px; cursor: pointer; color: #64748b; transition: all 0.2s; }
+    .tab-btn:hover { color: #1e293b; }
+    .tab-btn.active { background: white; color: #1e293b; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Charts Grid */
+    .charts-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (min-width: 768px) { .charts-grid { grid-template-columns: repeat(2, 1fr); } }
+    
+    .chart-card { padding: 1.25rem; }
+    .chart-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-weight: 600; color: #1e293b; }
+    .chart-container { height: 200px; }
+    
+    /* Cycle Counter */
+    .cycle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    @media (min-width: 768px) { .cycle-grid { grid-template-columns: repeat(4, 1fr); } }
+    .cycle-item { padding: 1rem; background: #f8fafc; border-radius: 12px; }
+    .cycle-name { font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem; }
+    .cycle-value { font-size: 1.5rem; font-weight: 700; color: #4f46e5; }
+    .cycle-label { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; }
+    
+    /* Table */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; background: rgba(248, 250, 252, 0.5); text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.75rem 1rem; border-top: 1px solid #f1f5f9; font-size: 0.875rem; }
+    tr:hover { background: rgba(248, 250, 252, 0.5); }
+    
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 500; border-radius: 9999px; }
+    .badge-emerald { background: #d1fae5; color: #047857; }
+    .badge-amber { background: #fef3c7; color: #b45309; }
+    .badge-red { background: #fee2e2; color: #dc2626; }
+    
+    /* Alerts */
+    .alert-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; }
+    .alert-title { font-weight: 500; color: #991b1b; }
+    .alert-meta { font-size: 0.875rem; color: #dc2626; margin-top: 0.25rem; }
+    
+    /* Empty State */
+    .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
+    .empty-state svg { width: 48px; height: 48px; margin: 0 auto 0.75rem; opacity: 0.3; }
+    
+    /* Utilities */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .p-6 { padding: 1.5rem; }
+    .text-emerald { color: #059669; }
+    .text-amber { color: #d97706; }
+    .text-red { color: #dc2626; }
+    .text-indigo { color: #4f46e5; }
+    .text-slate-500 { color: #64748b; }
+    .font-medium { font-weight: 500; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <button class="back-btn">
+          <i data-lucide="arrow-left" style="width: 20px; height: 20px; color: #475569;"></i>
+        </button>
+        <div>
+          <h1 class="header-title">Health Monitoring</h1>
+          <p class="header-subtitle">System health and diagnostics</p>
+        </div>
+      </div>
+      
+      <div class="header-controls">
+        <select class="select select-lg">
+          <option value="">All Robots</option>
+          <option value="atlas">Atlas-01</option>
+          <option value="titan">Titan-02</option>
+          <option value="nova">Nova-03</option>
+          <option value="orion">Orion-04</option>
+          <option value="phoenix">Phoenix-05</option>
+        </select>
+        <select class="select select-sm">
+          <option value="1h">Last Hour</option>
+          <option value="24h" selected>Last 24h</option>
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+        </select>
+        <button class="btn">
+          <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+          Export
+        </button>
+      </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="metric-grid">
+      <div class="metric-card metric-card-emerald">
+        <div class="flex items-center gap-3">
+          <div class="metric-icon metric-icon-emerald">
+            <i data-lucide="battery" style="width: 20px; height: 20px; color: #059669;"></i>
+          </div>
+          <div>
+            <p style="font-size: 0.875rem; color: #64748b;">Avg. Battery</p>
+            <p class="metric-value metric-value-emerald">72%</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="metric-card metric-card-emerald">
+        <div class="flex items-center gap-3">
+          <div class="metric-icon metric-icon-emerald">
+            <i data-lucide="thermometer" style="width: 20px; height: 20px; color: #059669;"></i>
+          </div>
+          <div>
+            <p style="font-size: 0.875rem; color: #64748b;">Avg. Temperature</p>
+            <p class="metric-value metric-value-emerald">48°C</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="metric-card metric-card-emerald">
+        <div class="flex items-center gap-3">
+          <div class="metric-icon metric-icon-emerald">
+            <i data-lucide="cpu" style="width: 20px; height: 20px; color: #059669;"></i>
+          </div>
+          <div>
+            <p style="font-size: 0.875rem; color: #64748b;">Avg. CPU Usage</p>
+            <p class="metric-value metric-value-emerald">42%</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="metric-card metric-card-red">
+        <div class="flex items-center gap-3">
+          <div class="metric-icon metric-icon-red">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #dc2626;"></i>
+          </div>
+          <div>
+            <p style="font-size: 0.875rem; color: #64748b;">Total Alerts</p>
+            <p class="metric-value metric-value-red">3</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-list">
+      <button class="tab-btn active" data-tab="charts">Charts</button>
+      <button class="tab-btn" data-tab="logs">Log History</button>
+      <button class="tab-btn" data-tab="alerts">Alerts</button>
+    </div>
+
+    <!-- Charts Tab -->
+    <div id="charts" class="tab-content active space-y-4">
+      <div class="charts-grid">
+        <!-- Battery Chart -->
+        <div class="card chart-card">
+          <div class="chart-title">
+            <i data-lucide="battery" style="width: 18px; height: 18px; color: #22c55e;"></i>
+            Battery Level Over Time
+          </div>
+          <div class="chart-container">
+            <canvas id="batteryChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Temperature Chart -->
+        <div class="card chart-card">
+          <div class="chart-title">
+            <i data-lucide="thermometer" style="width: 18px; height: 18px; color: #f59e0b;"></i>
+            Temperature Over Time
+          </div>
+          <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- CPU Chart -->
+        <div class="card chart-card">
+          <div class="chart-title">
+            <i data-lucide="cpu" style="width: 18px; height: 18px; color: #6366f1;"></i>
+            CPU Usage Over Time
+          </div>
+          <div class="chart-container">
+            <canvas id="cpuChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Memory Chart -->
+        <div class="card chart-card">
+          <div class="chart-title">
+            <i data-lucide="hard-drive" style="width: 18px; height: 18px; color: #8b5cf6;"></i>
+            Memory Usage Over Time
+          </div>
+          <div class="chart-container">
+            <canvas id="memoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cycle Counter -->
+      <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <i data-lucide="activity" style="width: 20px; height: 20px; color: #4f46e5;"></i>
+          <h3 style="font-weight: 600; color: #1e293b;">Cycle Counter</h3>
+        </div>
+        <div class="cycle-grid">
+          <div class="cycle-item">
+            <p class="cycle-name">Atlas-01</p>
+            <p class="cycle-value">1,245</p>
+            <p class="cycle-label">total cycles</p>
+          </div>
+          <div class="cycle-item">
+            <p class="cycle-name">Titan-02</p>
+            <p class="cycle-value">3,421</p>
+            <p class="cycle-label">total cycles</p>
+          </div>
+          <div class="cycle-item">
+            <p class="cycle-name">Nova-03</p>
+            <p class="cycle-value">2,100</p>
+            <p class="cycle-label">total cycles</p>
+          </div>
+          <div class="cycle-item">
+            <p class="cycle-name">Orion-04</p>
+            <p class="cycle-value">4,502</p>
+            <p class="cycle-label">total cycles</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs" class="tab-content">
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Robot</th>
+                <th>Battery</th>
+                <th>Temp</th>
+                <th>CPU</th>
+                <th>Memory</th>
+                <th>Cycles</th>
+                <th>Alerts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-slate-500">Jan 14, 10:30:00</td>
+                <td class="font-medium">Atlas-01</td>
+                <td><span class="badge badge-emerald">87%</span></td>
+                <td class="text-emerald">42°C</td>
+                <td>35%</td>
+                <td>48%</td>
+                <td>1,245</td>
+                <td class="text-slate-500">-</td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Jan 14, 10:28:00</td>
+                <td class="font-medium">Titan-02</td>
+                <td><span class="badge badge-emerald">62%</span></td>
+                <td class="text-amber">55°C</td>
+                <td>45%</td>
+                <td>52%</td>
+                <td>3,421</td>
+                <td class="text-slate-500">-</td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Jan 14, 08:00:00</td>
+                <td class="font-medium">Nova-03</td>
+                <td><span class="badge badge-amber">45%</span></td>
+                <td class="text-emerald">38°C</td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>2,100</td>
+                <td><span class="badge badge-amber">1</span></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Jan 14, 06:15:00</td>
+                <td class="font-medium">Orion-04</td>
+                <td><span class="badge badge-red">12%</span></td>
+                <td class="text-red">78°C</td>
+                <td>92%</td>
+                <td>88%</td>
+                <td>4,502</td>
+                <td><span class="badge badge-red">3</span></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Jan 14, 10:32:00</td>
+                <td class="font-medium">Phoenix-05</td>
+                <td><span class="badge badge-emerald">93%</span></td>
+                <td class="text-emerald">40°C</td>
+                <td>28%</td>
+                <td>35%</td>
+                <td>890</td>
+                <td class="text-slate-500">-</td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Jan 12, 14:00:00</td>
+                <td class="font-medium">Helios-06</td>
+                <td><span class="badge badge-red">0%</span></td>
+                <td class="text-emerald">22°C</td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>5,120</td>
+                <td class="text-slate-500">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Tab -->
+    <div id="alerts" class="tab-content">
+      <div class="card p-6">
+        <div class="space-y-3">
+          <div class="alert-item">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #dc2626; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+              <p class="alert-title">High temperature warning</p>
+              <p class="alert-meta">Orion-04 • Jan 14, 06:15</p>
+            </div>
+          </div>
+          <div class="alert-item">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #dc2626; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+              <p class="alert-title">Low battery critical</p>
+              <p class="alert-meta">Orion-04 • Jan 14, 06:15</p>
+            </div>
+          </div>
+          <div class="alert-item">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #dc2626; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+              <p class="alert-title">Motor degradation detected</p>
+              <p class="alert-meta">Orion-04 • Jan 14, 06:15</p>
+            </div>
+          </div>
+          <div class="alert-item" style="background: #fffbeb; border-color: #fef3c7;">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #d97706; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+              <p class="alert-title" style="color: #92400e;">Scheduled maintenance in progress</p>
+              <p class="alert-meta" style="color: #d97706;">Nova-03 • Jan 14, 08:00</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Tab functionality
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Chart configurations
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8' } },
+        y: { min: 0, max: 100, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#94a3b8' } }
+      }
+    };
+
+    const labels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'];
+
+    // Battery Chart
+    new Chart(document.getElementById('batteryChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: [95, 88, 82, 75, 70, 65, 72],
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: chartOptions
+    });
+
+    // Temperature Chart
+    new Chart(document.getElementById('tempChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: [35, 42, 55, 62, 58, 50, 48],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: chartOptions
+    });
+
+    // CPU Chart
+    new Chart(document.getElementById('cpuChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: [20, 35, 65, 80, 55, 40, 42],
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: chartOptions
+    });
+
+    // Memory Chart
+    new Chart(document.getElementById('memoryChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: [30, 38, 45, 52, 48, 44, 46],
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: chartOptions
+    });
+  </script>
+</body>
+</html>

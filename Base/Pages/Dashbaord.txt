@@ -1,0 +1,272 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  ArrowLeft, Battery, Thermometer, Activity, Wifi, WifiOff,
+  Settings, Play, Pause, RefreshCw, MapPin
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import JointVisualizer from "@/components/robot/JointVisualizer";
+import JointDetailPanel from "@/components/robot/JointDetailPanel";
+import HealthChart from "@/components/health/HealthChart";
+import PathMap from "@/components/path/PathMap";
+
+export default function RobotDetail() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const robotId = urlParams.get('id');
+  const queryClient = useQueryClient();
+  
+  const [selectedJoint, setSelectedJoint] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const { data: robot, isLoading } = useQuery({
+    queryKey: ['robot', robotId],
+    queryFn: () => base44.entities.Robot.filter({ id: robotId }),
+    select: (data) => data?.[0],
+    enabled: !!robotId,
+    refetchInterval: 3000
+  });
+
+  const { data: joints } = useQuery({
+    queryKey: ['joints', robotId],
+    queryFn: () => base44.entities.JointData.filter({ robot_id: robotId }),
+    enabled: !!robotId
+  });
+
+  const { data: healthLogs } = useQuery({
+    queryKey: ['health', robotId],
+    queryFn: () => base44.entities.HealthLog.filter({ robot_id: robotId }, '-created_date', 50),
+    enabled: !!robotId
+  });
+
+  const { data: pathLogs } = useQuery({
+    queryKey: ['paths', robotId],
+    queryFn: () => base44.entities.PathLog.filter({ robot_id: robotId }, '-created_date', 10),
+    enabled: !!robotId
+  });
+
+  const statusConfig = {
+    online: { color: "bg-emerald-500", text: "Online", textColor: "text-emerald-600" },
+    offline: { color: "bg-slate-400", text: "Offline", textColor: "text-slate-600" },
+    maintenance: { color: "bg-amber-500", text: "Maintenance", textColor: "text-amber-600" },
+    error: { color: "bg-red-500", text: "Error", textColor: "text-red-600" }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 p-4 md:p-6">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!robot) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 p-4 md:p-6 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-500 mb-4">Robot not found</p>
+          <Link to={createPageUrl("Dashboard")}>
+            <Button>Back to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const status = statusConfig[robot?.status] || statusConfig.offline;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl("Dashboard")}>
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-slate-800">{robot.name}</h1>
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-2.5 h-2.5 rounded-full animate-pulse", status.color)} />
+                  <span className={cn("text-sm font-medium", status.textColor)}>{status.text}</span>
+                </div>
+              </div>
+              <p className="text-slate-500 text-sm mt-1">
+                Firmware v{robot.firmware_version || "1.0.0"} • Last sync: {robot.last_sync ? format(new Date(robot.last_sync), 'MMM dd, HH:mm') : 'Never'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Link to={createPageUrl(`TeleOperation?robot=${robotId}`)}>
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Play className="w-4 h-4 mr-2" />
+                Tele-Operate
+              </Button>
+            </Link>
+            <Button variant="outline">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4 border-0 bg-white/80">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "p-2 rounded-lg",
+                robot.battery_level > 50 ? "bg-emerald-100" : robot.battery_level > 20 ? "bg-amber-100" : "bg-red-100"
+              )}>
+                <Battery className={cn(
+                  "w-5 h-5",
+                  robot.battery_level > 50 ? "text-emerald-600" : robot.battery_level > 20 ? "text-amber-600" : "text-red-600"
+                )} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-800">{robot.battery_level || 0}%</p>
+                <p className="text-xs text-slate-500">Battery</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4 border-0 bg-white/80">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "p-2 rounded-lg",
+                robot.temperature < 60 ? "bg-emerald-100" : robot.temperature < 80 ? "bg-amber-100" : "bg-red-100"
+              )}>
+                <Thermometer className={cn(
+                  "w-5 h-5",
+                  robot.temperature < 60 ? "text-emerald-600" : robot.temperature < 80 ? "text-amber-600" : "text-red-600"
+                )} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-800">{robot.temperature || 0}°C</p>
+                <p className="text-xs text-slate-500">Temperature</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4 border-0 bg-white/80">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-indigo-100">
+                <Activity className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-800">{robot.cycle_count?.toLocaleString() || 0}</p>
+                <p className="text-xs text-slate-500">Cycles</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4 border-0 bg-white/80">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100">
+                <MapPin className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-800">{robot.motor_health || 0}%</p>
+                <p className="text-xs text-slate-500">Motor Health</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="bg-white/80 p-1">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="joints">Joints (42)</TabsTrigger>
+            <TabsTrigger value="health">Health</TabsTrigger>
+            <TabsTrigger value="paths">Path Logs</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <JointVisualizer joints={joints} onJointSelect={setSelectedJoint} />
+              {selectedJoint ? (
+                <JointDetailPanel 
+                  joint={selectedJoint} 
+                  onClose={() => setSelectedJoint(null)}
+                />
+              ) : (
+                <Card className="p-6 border-0 bg-white/80 flex items-center justify-center">
+                  <div className="text-center text-slate-400">
+                    <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Click a joint to view details</p>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="joints">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <JointVisualizer joints={joints} onJointSelect={setSelectedJoint} />
+              </div>
+              <div>
+                <JointDetailPanel 
+                  joint={selectedJoint || joints?.[0]} 
+                  onClose={() => setSelectedJoint(null)}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="health" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <HealthChart 
+                data={healthLogs} 
+                title="Battery Level" 
+                dataKey="battery_level" 
+                color="#22c55e"
+                unit="%"
+              />
+              <HealthChart 
+                data={healthLogs} 
+                title="Temperature" 
+                dataKey="temperature" 
+                color="#f59e0b"
+                unit="°C"
+              />
+              <HealthChart 
+                data={healthLogs} 
+                title="CPU Usage" 
+                dataKey="cpu_usage" 
+                color="#6366f1"
+                unit="%"
+              />
+              <HealthChart 
+                data={healthLogs} 
+                title="Memory Usage" 
+                dataKey="memory_usage" 
+                color="#8b5cf6"
+                unit="%"
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="paths">
+            <PathMap pathLog={pathLogs} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

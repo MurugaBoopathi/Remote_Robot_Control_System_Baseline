@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Fleet Dashboard</title>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 30px;
+            color: #1c1c1c;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            font-size: 34px;
+        }
+
+        .top-bar p {
+            margin: 0;
+            margin-top: 5px;
+            color: #6b717e;
+        }
+
+        .refresh-btn {
+            background: white;
+            border: 1px solid #dfe3eb;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #e3e7ee;
+            position: relative;
+        }
+
+        .stat-card p {
+            margin: 0;
+            color: #6b717e;
+        }
+
+        .stat-card h2 {
+            margin-top: 6px;
+            font-size: 26px;
+        }
+
+        .icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .success {
+            background: #e3f8ed;
+            color: #1ca857;
+        }
+
+        .danger {
+            background: #ffe5e5;
+            color: #d9534f;
+        }
+
+        .actions-grid {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .action-btn {
+            background: white;
+            padding: 18px;
+            border-radius: 14px;
+            border: 1px solid #e0e5ee;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .notify .badge {
+            background: #d9534f;
+            color: white;
+            font-size: 12px;
+            padding: 3px 7px;
+            border-radius: 50px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .fleet-title {
+            margin-top: 35px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .fleet-title a {
+            color: #5a74ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .robot-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        .robot-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #e3e7ee;
+        }
+
+        .robot-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .robot-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .robot-header small {
+            color: #8892a7;
+        }
+
+        .status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .online { background: #28c76f; }
+        .maintenance { background: #ffb200; }
+        .offline { background: #9ca3af; }
+
+        .tag {
+            padding: 3px 10px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .online-tag { background: #e3f8ed; color: #1ca857; }
+        .maintenance-tag { background: #fff4d9; color: #d08d00; }
+        .offline-tag { background: #e5e7eb; color: #6b717e; }
+
+        .robot-info {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .robot-info p {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+    <div>
+        <h1>Robot Fleet Dashboard</h1>
+        <p>Monitor and manage your humanoid robots</p>
+    </div>
+
+    <button class="refresh-btn">
+        <i data-feather="refresh-ccw"></i> Refresh
+    </button>
+</div>
+
+<!-- STATS -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <p>Robots Online</p>
+        <h2>3/7</h2>
+        <span class="icon success"><i data-feather="wifi"></i></span>
+    </div>
+
+    <div class="stat-card">
+        <p>Avg. Battery</p>
+        <h2>63%</h2>
+        <span class="icon success"><i data-feather="battery"></i></span>
+    </div>
+
+    <div class="stat-card">
+        <p>Avg. Temperature</p>
+        <h2>43°C</h2>
+        <span class="icon success"><i data-feather="thermometer"></i></span>
+    </div>
+
+    <div class="stat-card">
+        <p>Active Alerts</p>
+        <h2>1</h2>
+        <span class="icon danger"><i data-feather="alert-triangle"></i></span>
+    </div>
+</section>
+
+<!-- ACTION BUTTONS -->
+<section class="actions-grid">
+    <button class="action-btn"><i data-feather="cpu"></i> Tele-Op Control</button>
+    <button class="action-btn"><i data-feather="activity"></i> Kinematics</button>
+    <button class="action-btn"><i data-feather="clipboard"></i> Health Logs</button>
+    <button class="action-btn notify">
+        <i data-feather="rotate-cw"></i> Updates
+        <span class="badge">2</span>
+    </button>
+</section>
+
+<!-- ROBOT FLEET -->
+<div class="fleet-title">
+    <h2>Robot Fleet</h2>
+    <a href="#allRobots" onclick="openRobotsPage()">View All →</a>
+</div>
+
+<section class="robot-grid">
+
+    <div class="robot-card">
+        <div class="robot-header">
+            <span class="status online"></span>
+            <h3>Atlas-01 <small>v2.4.1</small></h3>
+            <span class="tag online-tag">Online</span>
+        </div>
+
+        <div class="robot-info">
+            <p><i data-feather="battery"></i> 87%</p>
+            <p><i data-feather="thermometer"></i> 42°C</p>
+            <p><i data-feather="activity"></i> 15,420</p>
+            <p><i data-feather="wifi"></i> 94%</p>
+        </div>
+    </div>
+
+    <div class="robot-card">
+        <div class="robot-header">
+            <span class="status maintenance"></span>
+            <h3>Titan-02 <small>v2.3.8</small></h3>
+            <span class="tag maintenance-tag">Maintenance</span>
+        </div>
+
+        <div class="robot-info">
+            <p><i data-feather="battery"></i> 65%</p>
+            <p><i data-feather="thermometer"></i> 38°C</p>
+            <p><i data-feather="activity"></i> 8,930</p>
+            <p><i data-feather="wifi-off"></i> 78%</p>
+        </div>
+    </div>
+
+    <div class="robot-card">
+        <div class="robot-header">
+            <span class="status offline"></span>
+            <h3>Nova-03 <small>v2.4.0</small></h3>
+            <span class="tag offline-tag">Offline</span>
+        </div>
+
+        <div class="robot-info">
+            <p><i data-feather="battery"></i> 23%</p>
+            <p><i data-feather="thermometer"></i> 25°C</p>
+            <p><i data-feather="activity"></i> 21,050</p>
+            <p><i data-feather="wifi-off"></i> 85%</p>
+        </div>
+    </div>
+
+</section>
+
+<!-- "ROBOTS" PAGE (embedded) -->
+<div id="robotsPage" style="display:none; margin-top:40px;">
+    <h1>All Robots</h1>
+    <p>This is a placeholder robots page.</p>
+    <button onclick="closeRobotsPage()">← Back</button>
+</div>
+
+<script>
+    feather.replace();
+
+    function openRobotsPage() {
+        document.querySelector(".stats-grid").style.display = "none";
+        document.querySelector(".actions-grid").style.display = "none";
+        document.querySelector(".robot-grid").style.display = "none";
+        document.querySelector(".fleet-title").style.display = "none";
+        document.getElementById("robotsPage").style.display = "block";
+    }
+
+    function closeRobotsPage() {
+        document.querySelector(".stats-grid").style.display = "grid";
+        document.querySelector(".actions-grid").style.display = "grid";
+        document.querySelector(".robot-grid").style.display = "grid";
+        document.querySelector(".fleet-title").style.display = "flex";
+        document.getElementById("robotsPage").style.display = "none";
+    }
+</script>
+
+</body>
+</html>

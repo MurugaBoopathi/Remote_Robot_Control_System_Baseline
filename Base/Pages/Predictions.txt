@@ -1,0 +1,197 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { 
+  ArrowLeft, Bot, Brain, Wrench, Battery, AlertTriangle, 
+  TrendingUp, RefreshCw, Sparkles
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import PredictionCard from "@/components/predictions/PredictionCard";
+import MaintenancePrediction from "@/components/predictions/MaintenancePrediction";
+import BatteryPrediction from "@/components/predictions/BatteryPrediction";
+import FailurePrediction from "@/components/predictions/FailurePrediction";
+import UsagePrediction from "@/components/predictions/UsagePrediction";
+
+export default function Predictions() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const preselectedId = urlParams.get('id');
+  
+  const [selectedRobotId, setSelectedRobotId] = useState(preselectedId || '');
+
+  const { data: robots } = useQuery({
+    queryKey: ['robots'],
+    queryFn: () => base44.entities.Robot.list()
+  });
+
+  const { data: joints } = useQuery({
+    queryKey: ['joints', selectedRobotId],
+    queryFn: () => base44.entities.JointData.filter({ robot_id: selectedRobotId }),
+    enabled: !!selectedRobotId
+  });
+
+  const { data: healthLogs } = useQuery({
+    queryKey: ['health', selectedRobotId],
+    queryFn: () => base44.entities.HealthLog.filter({ robot_id: selectedRobotId }, '-timestamp', 100),
+    enabled: !!selectedRobotId
+  });
+
+  const selectedRobot = robots?.find(r => r.id === selectedRobotId);
+
+  // Calculate summary predictions
+  const criticalJoints = joints?.filter(j => j.wear_level > 70 || j.status === 'error').length || 0;
+  const avgWear = joints?.length ? Math.round(joints.reduce((s, j) => s + (j.wear_level || 0), 0) / joints.length) : 0;
+  
+  // Battery prediction
+  const batteryHoursLeft = selectedRobot?.battery_level ? Math.round(selectedRobot.battery_level / 5) : 0;
+  
+  // System health score
+  const healthScore = selectedRobot ? Math.round(
+    (selectedRobot.battery_level * 0.3) + 
+    (selectedRobot.motor_health * 0.4) + 
+    ((100 - avgWear) * 0.3)
+  ) : 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl("Dashboard")}>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+                <Brain className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">AI Predictions</h1>
+                <p className="text-sm text-slate-500">Predictive analytics & forecasting</p>
+              </div>
+            </div>
+          </div>
+          
+          <Select value={selectedRobotId} onValueChange={setSelectedRobotId}>
+            <SelectTrigger className="w-48 bg-white">
+              <SelectValue placeholder="Select robot" />
+            </SelectTrigger>
+            <SelectContent>
+              {robots?.map(robot => (
+                <SelectItem key={robot.id} value={robot.id}>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${robot.status === 'online' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                    {robot.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedRobotId ? (
+          <div className="space-y-6">
+            {/* Quick Insights */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <PredictionCard
+                title="System Health"
+                prediction={`${healthScore}%`}
+                confidence={85}
+                risk={healthScore > 70 ? 'low' : healthScore > 40 ? 'medium' : 'high'}
+                icon={Sparkles}
+                subtitle="Overall system score"
+              />
+              <PredictionCard
+                title="Battery Runtime"
+                prediction={`~${batteryHoursLeft}h`}
+                confidence={78}
+                risk={batteryHoursLeft > 8 ? 'low' : batteryHoursLeft > 3 ? 'medium' : 'high'}
+                icon={Battery}
+                subtitle="Estimated remaining"
+              />
+              <PredictionCard
+                title="Maintenance Alert"
+                prediction={criticalJoints > 0 ? `${criticalJoints} joints` : 'All clear'}
+                confidence={92}
+                risk={criticalJoints > 2 ? 'high' : criticalJoints > 0 ? 'medium' : 'low'}
+                icon={Wrench}
+                subtitle="Need attention"
+              />
+              <PredictionCard
+                title="Avg Wear Level"
+                prediction={`${avgWear}%`}
+                confidence={88}
+                risk={avgWear > 50 ? 'high' : avgWear > 30 ? 'medium' : 'low'}
+                icon={TrendingUp}
+                subtitle="Joint wear average"
+              />
+            </div>
+
+            {/* Detailed Predictions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <MaintenancePrediction joints={joints} robot={selectedRobot} />
+              <BatteryPrediction healthLogs={healthLogs} robot={selectedRobot} />
+              <FailurePrediction joints={joints} healthLogs={healthLogs} robot={selectedRobot} />
+              <UsagePrediction robot={selectedRobot} healthLogs={healthLogs} />
+            </div>
+
+            {/* AI Insights */}
+            <Card className="p-5 border-0 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-semibold text-slate-800">AI Recommendations</h3>
+              </div>
+              <div className="space-y-2">
+                {criticalJoints > 0 && (
+                  <div className="flex items-start gap-2 p-3 bg-white/80 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
+                    <p className="text-sm text-slate-700">
+                      Schedule maintenance for {criticalJoints} high-wear joints within the next 2 weeks to prevent failures.
+                    </p>
+                  </div>
+                )}
+                {selectedRobot?.battery_level < 50 && (
+                  <div className="flex items-start gap-2 p-3 bg-white/80 rounded-lg">
+                    <Battery className="w-4 h-4 text-amber-500 mt-0.5" />
+                    <p className="text-sm text-slate-700">
+                      Battery is below 50%. Consider charging soon to ensure uninterrupted operation.
+                    </p>
+                  </div>
+                )}
+                {selectedRobot?.temperature > 50 && (
+                  <div className="flex items-start gap-2 p-3 bg-white/80 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
+                    <p className="text-sm text-slate-700">
+                      Core temperature elevated. Recommend reducing workload or improving cooling.
+                    </p>
+                  </div>
+                )}
+                {healthScore > 80 && (
+                  <div className="flex items-start gap-2 p-3 bg-white/80 rounded-lg">
+                    <Sparkles className="w-4 h-4 text-emerald-500 mt-0.5" />
+                    <p className="text-sm text-slate-700">
+                      System is operating optimally. Continue current maintenance schedule.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <Card className="p-12 border-0 bg-white/80 backdrop-blur-sm text-center">
+            <Brain className="w-16 h-16 mx-auto text-slate-300 mb-4" />
+            <h3 className="text-lg font-medium text-slate-700 mb-2">Select a Robot</h3>
+            <p className="text-slate-500">Choose a robot to view AI-powered predictions</p>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}

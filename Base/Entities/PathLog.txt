@@ -1,0 +1,52 @@
+{
+  "name": "PathLog",
+  "type": "object",
+  "properties": {
+    "robot_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "waypoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "orientation": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "total_distance": {
+      "type": "number"
+    },
+    "duration_seconds": {
+      "type": "number"
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_time": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "robot_id"
+  ]
+}

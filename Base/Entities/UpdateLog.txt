@@ -1,0 +1,47 @@
+{
+  "name": "UpdateLog",
+  "type": "object",
+  "properties": {
+    "robot_id": {
+      "type": "string"
+    },
+    "update_type": {
+      "type": "string",
+      "enum": [
+        "firmware",
+        "software",
+        "calibration",
+        "config"
+      ]
+    },
+    "version_from": {
+      "type": "string"
+    },
+    "version_to": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "progress": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "initiated_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "robot_id",
+    "update_type"
+  ]
+}

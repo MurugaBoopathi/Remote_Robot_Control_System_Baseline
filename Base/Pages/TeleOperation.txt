@@ -1,0 +1,198 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Bot } from "lucide-react";
+import { cn } from "@/lib/utils";
+import TeleOpController from "@/components/teleop/TeleOpController";
+import JointVisualizer from "@/components/robot/JointVisualizer";
+import JointDetailPanel from "@/components/robot/JointDetailPanel";
+
+export default function TeleOperation() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const preselectedRobot = urlParams.get('robot');
+  
+  const [selectedRobotId, setSelectedRobotId] = useState(preselectedRobot || "");
+  const [selectedJoint, setSelectedJoint] = useState(null);
+  const [commandLog, setCommandLog] = useState([]);
+
+  const { data: robots } = useQuery({
+    queryKey: ['robots'],
+    queryFn: () => base44.entities.Robot.list()
+  });
+
+  const { data: joints, refetch: refetchJoints } = useQuery({
+    queryKey: ['joints', selectedRobotId],
+    queryFn: () => base44.entities.JointData.filter({ robot_id: selectedRobotId }),
+    enabled: !!selectedRobotId
+  });
+
+  const selectedRobot = robots?.find(r => r.id === selectedRobotId);
+  const isConnected = selectedRobot?.status === 'online';
+
+  const handleCommand = (command, speed) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setCommandLog(prev => [{
+      command,
+      speed,
+      timestamp
+    }, ...prev.slice(0, 19)]);
+    
+    // In a real implementation, this would send the command to the robot
+    console.log(`Command: ${command}, Speed: ${speed}%`);
+  };
+
+  const handleJointAngleChange = async (jointId, angle) => {
+    // In a real implementation, this would update the joint angle on the robot
+    console.log(`Joint ${jointId} angle changed to ${angle}°`);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl("Dashboard")}>
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-700">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Tele-Operation Control</h1>
+              <p className="text-slate-400 text-sm">Remote robot driving interface</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Select value={selectedRobotId} onValueChange={setSelectedRobotId}>
+              <SelectTrigger className="w-48 bg-slate-800 border-slate-700 text-white">
+                <SelectValue placeholder="Select Robot" />
+              </SelectTrigger>
+              <SelectContent>
+                {robots?.map(robot => (
+                  <SelectItem key={robot.id} value={robot.id}>
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        robot.status === 'online' ? "bg-emerald-500" : "bg-slate-400"
+                      )} />
+                      {robot.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {selectedRobot && (
+              <Badge variant="outline" className={cn(
+                "border",
+                isConnected ? "border-emerald-500 text-emerald-400" : "border-red-500 text-red-400"
+              )}>
+                {isConnected ? "Connected" : "Offline"}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {!selectedRobotId ? (
+          <div className="flex items-center justify-center h-96 bg-slate-800/50 rounded-xl">
+            <div className="text-center text-slate-400">
+              <Bot className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">Select a robot to begin tele-operation</p>
+              <p className="text-sm mt-2">Choose from the dropdown above</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Main Control Panel */}
+            <div className="xl:col-span-2">
+              <TeleOpController 
+                robot={selectedRobot}
+                onCommand={handleCommand}
+                isConnected={isConnected}
+              />
+            </div>
+
+            {/* Side Panel */}
+            <div className="space-y-4">
+              {/* Command Log */}
+              <div className="bg-slate-800/80 rounded-xl p-4 backdrop-blur-sm">
+                <h3 className="font-semibold text-white mb-3">Command Log</h3>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {commandLog.length > 0 ? (
+                    commandLog.map((log, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-slate-700 last:border-0">
+                        <span className="text-slate-400">{log.timestamp}</span>
+                        <span className="text-indigo-400 font-medium">{log.command}</span>
+                        <span className="text-slate-500">{log.speed}%</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-sm text-center py-4">No commands yet</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Joint Quick View */}
+              {selectedJoint && (
+                <div className="bg-slate-800/80 rounded-xl backdrop-blur-sm">
+                  <JointDetailPanel 
+                    joint={selectedJoint}
+                    onClose={() => setSelectedJoint(null)}
+                    onAngleChange={handleJointAngleChange}
+                  />
+                </div>
+              )}
+
+              {/* Robot Stats */}
+              {selectedRobot && (
+                <div className="bg-slate-800/80 rounded-xl p-4 backdrop-blur-sm">
+                  <h3 className="font-semibold text-white mb-3">Robot Status</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-400">Battery</p>
+                      <p className={cn(
+                        "text-lg font-bold",
+                        selectedRobot.battery_level > 50 ? "text-emerald-400" :
+                        selectedRobot.battery_level > 20 ? "text-amber-400" : "text-red-400"
+                      )}>
+                        {selectedRobot.battery_level || 0}%
+                      </p>
+                    </div>
+                    <div className="p-3 bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-400">Temperature</p>
+                      <p className={cn(
+                        "text-lg font-bold",
+                        selectedRobot.temperature < 60 ? "text-emerald-400" :
+                        selectedRobot.temperature < 80 ? "text-amber-400" : "text-red-400"
+                      )}>
+                        {selectedRobot.temperature || 0}°C
+                      </p>
+                    </div>
+                    <div className="p-3 bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-400">Motor Health</p>
+                      <p className="text-lg font-bold text-indigo-400">
+                        {selectedRobot.motor_health || 0}%
+                      </p>
+                    </div>
+                    <div className="p-3 bg-slate-700/50 rounded-lg">
+                      <p className="text-xs text-slate-400">Cycles</p>
+                      <p className="text-lg font-bold text-slate-300">
+                        {selectedRobot.cycle_count?.toLocaleString() || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,40 @@
+{
+  "name": "HealthLog",
+  "type": "object",
+  "properties": {
+    "robot_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "battery_level": {
+      "type": "number"
+    },
+    "temperature": {
+      "type": "number"
+    },
+    "cycle_count": {
+      "type": "number"
+    },
+    "motor_health": {
+      "type": "number"
+    },
+    "cpu_usage": {
+      "type": "number"
+    },
+    "memory_usage": {
+      "type": "number"
+    },
+    "alerts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "robot_id"
+  ]
+}

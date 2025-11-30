@@ -1,0 +1,63 @@
+{
+  "name": "Robot",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Robot identifier name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "online",
+        "offline",
+        "maintenance",
+        "error"
+      ],
+      "default": "offline"
+    },
+    "battery_level": {
+      "type": "number",
+      "description": "Battery percentage 0-100"
+    },
+    "cycle_count": {
+      "type": "number",
+      "description": "Total operation cycles"
+    },
+    "firmware_version": {
+      "type": "string"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "orientation": {
+          "type": "number"
+        }
+      }
+    },
+    "temperature": {
+      "type": "number",
+      "description": "Core temperature in Celsius"
+    },
+    "motor_health": {
+      "type": "number",
+      "description": "Overall motor health percentage"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

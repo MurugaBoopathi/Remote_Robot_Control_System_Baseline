@@ -1,0 +1,283 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  ArrowLeft, Battery, Thermometer, Cpu, HardDrive, 
+  AlertTriangle, Download, Activity, TrendingUp
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import HealthChart from "@/components/health/HealthChart";
+import MetricCard from "@/components/dashboard/MetricCard";
+
+export default function Health() {
+  const [selectedRobotId, setSelectedRobotId] = useState("");
+  const [timeRange, setTimeRange] = useState("24h");
+
+  const { data: robots } = useQuery({
+    queryKey: ['robots'],
+    queryFn: () => base44.entities.Robot.list()
+  });
+
+  const { data: healthLogs } = useQuery({
+    queryKey: ['health-logs', selectedRobotId],
+    queryFn: () => selectedRobotId 
+      ? base44.entities.HealthLog.filter({ robot_id: selectedRobotId }, '-created_date', 100)
+      : base44.entities.HealthLog.list('-created_date', 100)
+  });
+
+  const selectedRobot = robots?.find(r => r.id === selectedRobotId);
+  const latestLog = healthLogs?.[0];
+
+  // Calculate averages
+  const avgBattery = healthLogs?.length 
+    ? Math.round(healthLogs.reduce((sum, h) => sum + (h.battery_level || 0), 0) / healthLogs.length)
+    : 0;
+  const avgTemp = healthLogs?.length 
+    ? Math.round(healthLogs.reduce((sum, h) => sum + (h.temperature || 0), 0) / healthLogs.length)
+    : 0;
+  const avgCpu = healthLogs?.length 
+    ? Math.round(healthLogs.reduce((sum, h) => sum + (h.cpu_usage || 0), 0) / healthLogs.length)
+    : 0;
+  const alertCount = healthLogs?.reduce((sum, h) => sum + (h.alerts?.length || 0), 0) || 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl("Dashboard")}>
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">Health Monitoring</h1>
+              <p className="text-slate-500 text-sm">System health and diagnostics</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Select value={selectedRobotId} onValueChange={setSelectedRobotId}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Robots" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={null}>All Robots</SelectItem>
+                {robots?.map(robot => (
+                  <SelectItem key={robot.id} value={robot.id}>
+                    {robot.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1h">Last Hour</SelectItem>
+                <SelectItem value="24h">Last 24h</SelectItem>
+                <SelectItem value="7d">Last 7 Days</SelectItem>
+                <SelectItem value="30d">Last 30 Days</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </div>
+        </div>
+
+        {/* Overview Metrics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <MetricCard 
+            title="Avg. Battery" 
+            value={`${avgBattery}%`}
+            icon={Battery}
+            color={avgBattery > 50 ? "emerald" : avgBattery > 20 ? "amber" : "red"}
+          />
+          <MetricCard 
+            title="Avg. Temperature" 
+            value={`${avgTemp}°C`}
+            icon={Thermometer}
+            color={avgTemp < 60 ? "emerald" : avgTemp < 80 ? "amber" : "red"}
+          />
+          <MetricCard 
+            title="Avg. CPU Usage" 
+            value={`${avgCpu}%`}
+            icon={Cpu}
+            color={avgCpu < 70 ? "emerald" : avgCpu < 90 ? "amber" : "red"}
+          />
+          <MetricCard 
+            title="Total Alerts" 
+            value={alertCount}
+            icon={AlertTriangle}
+            color={alertCount > 0 ? "red" : "slate"}
+          />
+        </div>
+
+        {/* Charts */}
+        <Tabs defaultValue="charts" className="space-y-4">
+          <TabsList className="bg-white/80">
+            <TabsTrigger value="charts">Charts</TabsTrigger>
+            <TabsTrigger value="logs">Log History</TabsTrigger>
+            <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="charts" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <HealthChart 
+                data={healthLogs} 
+                title="Battery Level Over Time" 
+                dataKey="battery_level" 
+                color="#22c55e"
+                unit="%"
+              />
+              <HealthChart 
+                data={healthLogs} 
+                title="Temperature Over Time" 
+                dataKey="temperature" 
+                color="#f59e0b"
+                unit="°C"
+              />
+              <HealthChart 
+                data={healthLogs} 
+                title="CPU Usage Over Time" 
+                dataKey="cpu_usage" 
+                color="#6366f1"
+                unit="%"
+              />
+              <HealthChart 
+                data={healthLogs} 
+                title="Memory Usage Over Time" 
+                dataKey="memory_usage" 
+                color="#8b5cf6"
+                unit="%"
+              />
+            </div>
+
+            {/* Cycle Counter */}
+            <Card className="p-6 border-0 bg-white/80">
+              <div className="flex items-center gap-3 mb-4">
+                <Activity className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-semibold text-slate-800">Cycle Counter</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {robots?.map(robot => (
+                  <div key={robot.id} className="p-4 bg-slate-50 rounded-xl">
+                    <p className="text-sm text-slate-500 mb-1">{robot.name}</p>
+                    <p className="text-2xl font-bold text-indigo-600">
+                      {robot.cycle_count?.toLocaleString() || 0}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">total cycles</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <Card className="border-0 bg-white/80 overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50/50">
+                      <TableHead>Timestamp</TableHead>
+                      <TableHead>Robot</TableHead>
+                      <TableHead>Battery</TableHead>
+                      <TableHead>Temp</TableHead>
+                      <TableHead>CPU</TableHead>
+                      <TableHead>Memory</TableHead>
+                      <TableHead>Cycles</TableHead>
+                      <TableHead>Alerts</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {healthLogs?.map((log) => {
+                      const robot = robots?.find(r => r.id === log.robot_id);
+                      return (
+                        <TableRow key={log.id} className="hover:bg-slate-50/50">
+                          <TableCell className="text-slate-500 text-sm">
+                            {log.timestamp ? format(new Date(log.timestamp), 'MMM dd, HH:mm:ss') : '-'}
+                          </TableCell>
+                          <TableCell className="font-medium">{robot?.name || 'Unknown'}</TableCell>
+                          <TableCell>
+                            <Badge className={cn(
+                              "border-0",
+                              log.battery_level > 50 ? "bg-emerald-100 text-emerald-700" :
+                              log.battery_level > 20 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                            )}>
+                              {log.battery_level}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className={cn(
+                              "font-medium",
+                              log.temperature < 60 ? "text-emerald-600" :
+                              log.temperature < 80 ? "text-amber-600" : "text-red-600"
+                            )}>
+                              {log.temperature}°C
+                            </span>
+                          </TableCell>
+                          <TableCell>{log.cpu_usage}%</TableCell>
+                          <TableCell>{log.memory_usage}%</TableCell>
+                          <TableCell>{log.cycle_count?.toLocaleString()}</TableCell>
+                          <TableCell>
+                            {log.alerts?.length > 0 ? (
+                              <Badge variant="destructive" className="text-xs">
+                                {log.alerts.length}
+                              </Badge>
+                            ) : (
+                              <span className="text-slate-400 text-sm">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="alerts">
+            <Card className="border-0 bg-white/80 p-6">
+              <div className="space-y-3">
+                {healthLogs?.filter(h => h.alerts?.length > 0).map((log) => {
+                  const robot = robots?.find(r => r.id === log.robot_id);
+                  return log.alerts.map((alert, idx) => (
+                    <div key={`${log.id}-${idx}`} className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-100">
+                      <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium text-red-800">{alert}</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          {robot?.name} • {log.timestamp ? format(new Date(log.timestamp), 'MMM dd, HH:mm') : ''}
+                        </p>
+                      </div>
+                    </div>
+                  ));
+                })}
+                {!healthLogs?.some(h => h.alerts?.length > 0) && (
+                  <div className="text-center py-12 text-slate-400">
+                    <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>No alerts recorded</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
