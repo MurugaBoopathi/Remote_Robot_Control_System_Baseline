@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+.predictions-bg {
+	background: linear-gradient(135deg, #f8fafc 0%, #fff 60%, #eef2ff 100%);
+	min-height: 100vh;
+	font-family: 'Inter', Arial, sans-serif;
+}
+.predictions-blur {
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+}
+.predictions-animate-pulse {
+	animation: predictions-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes predictions-pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: .5; }
+}
+.predictions-font {
+	font-family: 'Inter', Arial, sans-serif;
+}
+.predictions-shadow {
+	box-shadow: 0 2px 16px #0001;
+}
+.predictions-card {
+	border-radius: 16px;
+	border: none;
+	background: #fff;
+	box-shadow: 0 2px 16px #0001;
+}
+.predictions-gradient {
+	background: linear-gradient(135deg, #eef2ff 0%, #fff 100%);
+}
+.predictions-header {
+	font-weight: 700;
+	color: #3730a3;
+}
+.predictions-label {
+	font-size: 13px;
+	color: #6366f1;
+}
+.predictions-risk {
+	font-size: 15px;
+	color: #f59e42;
+}
+.predictions-progress {
+	height: 6px;
+	border-radius: 6px;
+	background: #e2e8f0;
+	overflow: hidden;
+}
+/* Moved from src/predictions.css */

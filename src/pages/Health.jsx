@@ -21,7 +21,7 @@ import {
 	Legend
 } from 'chart.js';
 import Papa from 'papaparse';
-import '../health.css';
+import '../styles/health.css';
 
 ChartJS.register(
 	CategoryScale,

@@ -1,0 +1,52 @@
+/* Health page custom styles for cards, metrics, tabs, charts, table, badges, alerts, cycle counter, and empty state. */
+
+.health-bg {
+	background: linear-gradient(135deg, #f8fafc 0%, rgba(238, 242, 255, 0.3) 50%, #f1f5f9 100%);
+	min-height: 100vh;
+}
+
+.health-card {
+    background: rgba(255,255,255,0.8);
+    -webkit-backdrop-filter: blur(4px); /* Safari support */
+    backdrop-filter: blur(4px);
+	border-radius: 12px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.health-metric {
+	padding: 1rem;
+	border-radius: 12px;
+	transition: box-shadow 0.2s;
+}
+.health-metric:hover {
+	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.health-metric-emerald { background: #ecfdf5; }
+.health-metric-red { background: #fef2f2; }
+
+.health-metric-icon {
+	padding: 0.5rem;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.health-metric-icon-emerald { background: #d1fae5; }
+.health-metric-icon-red { background: #fee2e2; }
+
+.health-metric-value { font-size: 1.25rem; font-weight: 700; }
+.health-metric-value-emerald { color: #059669; }
+.health-metric-value-red { color: #dc2626; }
+
+.health-tabs {
+	display: inline-flex;
+	padding: 4px;
+	background: rgba(255,255,255,0.8);
+	border-radius: 8px;
+	margin-bottom: 1rem;
+}
+.health-tab-btn {
+	padding: 0.5rem 1rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+}
