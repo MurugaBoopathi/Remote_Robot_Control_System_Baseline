@@ -78,18 +78,18 @@ export default function Robots() {
     <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa" }}>
       {/* Main */}
   <main style={{ padding: 20, flex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 16, alignItems: "center", marginBottom: 24 }}>
           <input
             type="text"
             placeholder="Search Robots..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: "12px 16px", fontSize: 16, borderRadius: 8, border: "1px solid #dfe3eb", background: "#f5f7fb", boxShadow: "0 2px 8px #e3e7ee22", outline: "none" }}
           />
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: "12px 16px", fontSize: 16, borderRadius: 8, border: "1px solid #dfe3eb", background: "#f5f7fb", boxShadow: "0 2px 8px #e3e7ee22", outline: "none" }}
           >
             <option value="">All Status</option>
             <option value="Online">Online</option>
@@ -98,29 +98,40 @@ export default function Robots() {
             <option value="Error">Error</option>
           </select>
           <button
-            style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, backgroundColor: "#6b5ce7", color: "white", border: "none", cursor: "pointer" }}
+            style={{ width: "100%", padding: "12px 0", fontSize: 16, borderRadius: 8, backgroundColor: "#6b5ce7", color: "white", border: "none", cursor: "pointer", fontWeight: 600, boxShadow: "0 2px 8px #6b5ce722" }}
             onClick={() => setShowModal(true)}
           >
             + Add Robot
           </button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 28 }}>
           {filteredRobots.map((robot, idx) => (
-            <div key={idx} style={{ background: "#fff", padding: 15, borderRadius: 12, boxShadow: "0 2px 6px rgba(0,0,0,0.1)", position: "relative", transition: "transform 0.2s" }}>
+            <div key={idx} style={{ background: "#fff", padding: 22, borderRadius: 18, boxShadow: "0 4px 16px #e3e7ee55", position: "relative", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer", minHeight: 180, display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 24px #b3b8c055'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 16px #e3e7ee55'}>
               <button
-                style={{ position: "absolute", top: 10, right: 10, background: "#f44336", color: "white", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer" }}
+                style={{ position: "absolute", top: 16, right: 16, background: "#f44336", color: "white", border: "none", borderRadius: 8, padding: "6px 8px", cursor: "pointer", fontSize: 16, boxShadow: "0 2px 6px #f4433622" }}
                 onClick={() => handleDelete(idx)}
+                title="Delete Robot"
               >🗑</button>
-              <h3 style={{ margin: "0 0 5px 0", fontSize: 18 }}>
-                <span style={{ height: 12, width: 12, borderRadius: "50%", display: "inline-block", marginRight: 6, background: statusColors[robot.status] }}></span>
+              <h3 style={{ margin: "0 0 8px 0", fontSize: 22, fontWeight: 600, display: "flex", alignItems: "center" }}>
+                <span style={{ height: 14, width: 14, borderRadius: "50%", display: "inline-block", marginRight: 10, background: statusColors[robot.status] }}></span>
                 {robot.name}
               </h3>
-              <small style={{ color: "#777", display: "block", marginBottom: 10 }}>{robot.version} - {robot.status}</small>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <div style={{ background: "#f5f5f5", padding: "5px 8px", borderRadius: 6, fontSize: 13, flex: "1 1 40%" }}>Battery: {robot.battery}</div>
-                <div style={{ background: "#f5f5f5", padding: "5px 8px", borderRadius: 6, fontSize: 13, flex: "1 1 40%" }}>Temp: {robot.temp}</div>
-                <div style={{ background: "#f5f5f5", padding: "5px 8px", borderRadius: 6, fontSize: 13, flex: "1 1 40%" }}>Steps: {robot.steps}</div>
-                <div style={{ background: "#f5f5f5", padding: "5px 8px", borderRadius: 6, fontSize: 13, flex: "1 1 40%" }}>WiFi: {robot.wifi}</div>
+              <small style={{ color: "#6b717e", display: "block", marginBottom: 12, fontSize: 15 }}>{robot.version} &nbsp;|&nbsp; <span style={{ color: statusColors[robot.status], fontWeight: 500 }}>{robot.status}</span></small>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 6 }}>
+                <div style={{ background: "#f5f7fb", padding: "7px 12px", borderRadius: 8, fontSize: 15, flex: "1 1 40%", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span role="img" aria-label="battery">🔋</span> {robot.battery}
+                </div>
+                <div style={{ background: "#f5f7fb", padding: "7px 12px", borderRadius: 8, fontSize: 15, flex: "1 1 40%", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span role="img" aria-label="temp">🌡️</span> {robot.temp}
+                </div>
+                <div style={{ background: "#f5f7fb", padding: "7px 12px", borderRadius: 8, fontSize: 15, flex: "1 1 40%", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span role="img" aria-label="steps">🚶‍♂️</span> {robot.steps}
+                </div>
+                <div style={{ background: "#f5f7fb", padding: "7px 12px", borderRadius: 8, fontSize: 15, flex: "1 1 40%", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span role="img" aria-label="wifi">📶</span> {robot.wifi}
+                </div>
               </div>
             </div>
           ))}

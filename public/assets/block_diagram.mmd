@@ -1,0 +1,19 @@
+graph TD
+    UI[User Interface]
+    Pages --> UI
+    Components --> UI
+    API[API Client]
+    Data[Data Storage]
+    CSV[CSV Files]
+    Assets[Assets]
+    Images --> Assets
+    SVGs --> Assets
+    Test[Testing]
+    Jest --> Test
+
+    UI --> API
+    API --> Data
+    Data --> CSV
+    Assets --> UI
+    Test --> UI
+    Test --> API

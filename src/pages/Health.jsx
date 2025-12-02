@@ -204,17 +204,14 @@ export default function Health() {
 				{/* Header */}
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
 					<div className="flex items-center gap-4">
-						<button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors">
-							<ArrowLeft className="w-5 h-5 text-slate-600" />
-						</button>
 						<div>
 							<h1 className="text-xl sm:text-2xl font-bold text-slate-900">Health Monitoring</h1>
 							<p className="text-sm text-slate-500">System health and diagnostics</p>
 						</div>
 					</div>
-					<div className="flex items-center gap-3 flex-wrap">
+					<div className="health-header-controls">
 						<select
-							className="w-48 h-10 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+							className="health-header-select"
 							value={selectedRobot}
 							onChange={e => setSelectedRobot(e.target.value)}
 						>
@@ -223,7 +220,7 @@ export default function Health() {
 							))}
 						</select>
 						<select
-							className="w-32 h-10 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+							className="health-header-select"
 							value={selectedTime}
 							onChange={e => setSelectedTime(e.target.value)}
 						>
@@ -231,8 +228,8 @@ export default function Health() {
 								<option key={t.value} value={t.value}>{t.label}</option>
 							))}
 						</select>
-						<button className="btn flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-md bg-white text-sm font-medium hover:bg-slate-50">
-							<Download className="w-4 h-4" /> Export
+						<button className="health-header-btn">
+							<Download className="w-5 h-5" /> Export
 						</button>
 					</div>
 				</div>

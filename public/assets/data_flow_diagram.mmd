@@ -1,0 +1,17 @@
+graph TD
+    User[User]
+    UI[UI Components/Pages]
+    API[API Client]
+    CSV[CSV Data Files]
+    Process[Data Processing]
+    Display[Display/Visualization]
+    Update[Update Actions]
+
+    User --> UI
+    UI --> API
+    API --> CSV
+    CSV --> Process
+    Process --> Display
+    UI --> Update
+    Update --> API
+    Update --> CSV

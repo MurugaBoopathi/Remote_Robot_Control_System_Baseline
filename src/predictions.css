@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 .predictions-bg {
-  background: linear-gradient(135deg, #f8fafc 0%, #fff 60%, #eef2ff 100%);
+  background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 60%, #f1f5f9 100%);
   min-height: 100vh;
   font-family: 'Inter', Arial, sans-serif;
 }
@@ -22,21 +22,49 @@
   box-shadow: 0 2px 16px #0001;
 }
 .predictions-card {
-  border-radius: 16px;
-  border: none;
-  background: #fff;
-  box-shadow: 0 2px 16px #0001;
+  border-radius: 18px;
+  border: 1px solid #e3e7ee;
+  background: linear-gradient(120deg, #f5f7fb 60%, #e3e7ee 100%);
+  box-shadow: 0 4px 24px #e3e7ee55;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.predictions-card:hover {
+  box-shadow: 0 8px 32px #c7d2fe88;
+  transform: translateY(-2px) scale(1.02);
 }
 .predictions-gradient {
   background: linear-gradient(135deg, #eef2ff 0%, #fff 100%);
 }
 .predictions-header {
-  font-weight: 700;
-  color: #3730a3;
+  font-weight: 800;
+  color: #6366f1;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
 }
 .predictions-label {
-  font-size: 13px;
+  font-size: 14px;
   color: #6366f1;
+  font-weight: 600;
+}
+.predictions-selector {
+  min-width: 140px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #e3e7ee;
+  background: linear-gradient(90deg, #f5f7fb 60%, #e3e7ee 100%);
+  font-size: 1rem;
+  color: #1e293b;
+  box-shadow: 0 2px 8px #e3e7ee22;
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none;
+  cursor: pointer;
+}
+.predictions-selector:focus, .predictions-selector:hover {
+  border: 1.5px solid #6366f1;
+  box-shadow: 0 4px 16px #c7d2fe55;
+}
+.predictions-section {
+  margin-bottom: 2rem;
 }
 .predictions-risk {
   font-size: 15px;

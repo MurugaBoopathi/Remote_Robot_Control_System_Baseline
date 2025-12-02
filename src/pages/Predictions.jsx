@@ -81,10 +81,55 @@ export default function Predictions() {
 
 		// Filter by selected robot
 		const selectedRobotId = robots.find(r => r.value === selectedRobot)?.value;
-		const health = healthLogs.filter(h => h.robot_id === selectedRobotId);
-		const joints = jointData.filter(j => j.robot_id === selectedRobotId);
-		const paths = pathLogs.filter(p => p.robot_id === selectedRobotId);
-		const updates = updateLogs.filter(u => u.robot_id === selectedRobotId);
+		let health = healthLogs.filter(h => h.robot_id === selectedRobotId);
+		let joints = jointData.filter(j => j.robot_id === selectedRobotId);
+		let paths = pathLogs.filter(p => p.robot_id === selectedRobotId);
+		let updates = updateLogs.filter(u => u.robot_id === selectedRobotId);
+
+		// Provide unique mock data if no real data is found for the selected robot
+		if (health.length === 0) {
+			const mockHealths = {
+				atlas: [84, 82, 80, 78, 76, 74, 72],
+				titan: [91, 89, 87, 85, 83, 81, 79],
+				nova: [65, 63, 61, 59, 57, 55, 53],
+				orion: [50, 48, 46, 44, 42, 40, 38],
+				phoenix: [99, 97, 95, 93, 91, 89, 87],
+			};
+			health = mockHealths[selectedRobotId]?.map((battery, i) => ({
+				robot_id: selectedRobotId,
+				timestamp: `2025-12-01T${String(i*2).padStart(2,'0')}:00`,
+				battery_level: battery,
+				motor_health: battery + 10,
+				alerts: i === 2 && selectedRobotId === 'orion' ? "['Critical failure detected']" : '[]',
+			})) || [];
+		}
+		if (joints.length === 0) {
+			const mockJoints = {
+				atlas: [{joint_id:'J1',joint_name:'Shoulder',status:'normal',wear_level:12},{joint_id:'J2',joint_name:'Elbow',status:'warning',wear_level:42}],
+				titan: [{joint_id:'J3',joint_name:'Knee',status:'normal',wear_level:18},{joint_id:'J4',joint_name:'Wrist',status:'error',wear_level:65}],
+				nova: [{joint_id:'J5',joint_name:'Hip',status:'warning',wear_level:55}],
+				orion: [{joint_id:'J6',joint_name:'Ankle',status:'error',wear_level:78}],
+				phoenix: [{joint_id:'J7',joint_name:'Torso',status:'normal',wear_level:8}],
+			};
+			joints = mockJoints[selectedRobotId] || [];
+		}
+		if (paths.length === 0) {
+			const mockPaths = {
+				atlas: [1200, 1300, 1400, 1500, 1600, 1700, 1800],
+				titan: [2200, 2300, 2400, 2500, 2600, 2700, 2800],
+				nova: [800, 900, 1000, 1100, 1200, 1300, 1400],
+				orion: [400, 500, 600, 700, 800, 900, 1000],
+				phoenix: [3200, 3300, 3400, 3500, 3600, 3700, 3800],
+			};
+			paths = (mockPaths[selectedRobotId] || []).map((distance, i) => ({
+				robot_id: selectedRobotId,
+				start_time: `2025-12-0${i+1}T08:00`,
+				total_distance: distance,
+			}));
+		}
+		if (updates.length === 0) {
+			updates = [{robot_id:selectedRobotId,update_type:'firmware',version_from:'1.0',version_to:'1.1'}];
+		}
 
 		// Prepare battery chart data
 		const batteryData = health.length > 0 ? {
@@ -175,25 +220,21 @@ export default function Predictions() {
 		<div className="predictions-bg">
 			<div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
 				{/* Header */}
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 predictions-section">
 					<div className="flex items-center gap-4">
-						<button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors">
-							<ArrowLeft className="w-5 h-5 text-slate-600" />
-						</button>
 						<div className="flex items-center gap-3">
-							<div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+							<div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl predictions-shadow">
 								<Brain className="w-5 h-5 text-white" />
 							</div>
 							<div>
-								<h1 className="text-xl sm:text-2xl font-bold text-slate-900">AI Predictions</h1>
+								<h1 className="predictions-header">AI Predictions</h1>
 								<p className="text-sm text-slate-500">Predictive analytics & forecasting</p>
 							</div>
 						</div>
 					</div>
-					{/* Robot Selector */}
 					<div className="relative">
 						<select
-							className="w-48 h-10 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+							className="predictions-selector"
 							value={selectedRobot}
 							onChange={e => setSelectedRobot(e.target.value)}
 						>
@@ -205,22 +246,22 @@ export default function Predictions() {
 					</div>
 				</div>
 
-				{/* Empty State */}
-				{!selectedRobot && (
-					  <div className="p-12 border-0 bg-white/80 predictions-blur text-center rounded-xl predictions-shadow">
-						<Brain className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-						<h3 className="text-lg font-medium text-slate-700 mb-2">Select a Robot</h3>
-						<p className="text-slate-500">Choose a robot to view AI-powered predictions</p>
-					</div>
-				)}
+								{/* Empty State */}
+								{!selectedRobot && (
+											<div className="p-12 border-0 predictions-card predictions-blur text-center predictions-shadow">
+												<Brain className="w-16 h-16 mx-auto text-indigo-200 mb-4 predictions-animate-pulse" />
+												<h3 className="text-lg font-bold predictions-header mb-2">Select a Robot</h3>
+												<p className="text-slate-500">Choose a robot to view AI-powered predictions</p>
+										</div>
+								)}
 
-				{/* Predictions Content */}
-				{selectedRobot && (
-					  <div className="space-y-6">
-								{/* Quick Insights - 4 Cards (with real data) */}
-								<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+		    {/* Predictions Content */}
+		    {selectedRobot && (
+			    <div className="space-y-6">
+					  {/* Quick Insights - 4 Cards (with real data) */}
+					  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 predictions-section">
 									{/* System Health Card */}
-									<div className="p-5 border-0 predictions-gradient predictions-blur overflow-hidden relative rounded-xl predictions-shadow">
+									<div className="p-5 predictions-card predictions-gradient predictions-blur overflow-hidden relative">
 										<div className="flex items-start justify-between mb-3">
 											<div className="flex items-center gap-3">
 												<div className="p-2 rounded-lg bg-emerald-100">
@@ -245,7 +286,7 @@ export default function Predictions() {
 										</div>
 									</div>
 									{/* Battery Runtime Card */}
-									<div className="p-5 border-0 predictions-gradient predictions-blur overflow-hidden relative rounded-xl predictions-shadow">
+									<div className="p-5 predictions-card predictions-gradient predictions-blur overflow-hidden relative">
 										<div className="flex items-start justify-between mb-3">
 											<div className="flex items-center gap-3">
 												<div className="p-2 rounded-lg bg-emerald-100">
@@ -270,7 +311,7 @@ export default function Predictions() {
 										</div>
 									</div>
 									{/* Maintenance Alert Card */}
-									<div className="p-5 border-0 predictions-gradient predictions-blur overflow-hidden relative rounded-xl predictions-shadow" style={{background: 'linear-gradient(135deg,#fef3c7 0%,#fff 100%)'}}>
+									<div className="p-5 predictions-card predictions-gradient predictions-blur overflow-hidden relative" style={{background: 'linear-gradient(135deg,#fef3c7 0%,#fff 100%)'}}>
 										<div className="flex items-start justify-between mb-3">
 											<div className="flex items-center gap-3">
 												<div className="p-2 rounded-lg bg-amber-100">
@@ -295,7 +336,7 @@ export default function Predictions() {
 										</div>
 									</div>
 									{/* Avg Wear Level Card */}
-									<div className="p-5 border-0 predictions-gradient predictions-blur overflow-hidden relative rounded-xl predictions-shadow">
+									<div className="p-5 predictions-card predictions-gradient predictions-blur overflow-hidden relative">
 										<div className="flex items-start justify-between mb-3">
 											<div className="flex items-center gap-3">
 												<div className="p-2 rounded-lg bg-emerald-100">
@@ -322,9 +363,9 @@ export default function Predictions() {
 								</div>
 
 						{/* Detailed Predictions - 2x2 Grid */}
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 predictions-section">
 							{/* Maintenance Prediction Card */}
-							  <div className="p-5 border-0 bg-white/80 predictions-blur rounded-xl predictions-shadow">
+							  <div className="p-5 predictions-card predictions-blur">
 								<div className="flex items-center gap-2 mb-4">
 									<Wrench className="w-5 h-5 text-indigo-600" />
 									<h3 className="font-semibold text-slate-800">Maintenance Predictions</h3>
@@ -422,7 +463,7 @@ export default function Predictions() {
 								</div>
 							</div>
 							{/* Battery Prediction Card */}
-							  <div className="p-5 border-0 bg-white/80 predictions-blur rounded-xl predictions-shadow">
+							  <div className="p-5 predictions-card predictions-blur">
 								<div className="flex items-center justify-between mb-4">
 									<div className="flex items-center gap-2">
 										<Battery className="w-5 h-5 text-emerald-600" />
@@ -455,7 +496,7 @@ export default function Predictions() {
 								</p>
 							</div>
 							{/* Failure Prediction Card */}
-							  <div className="p-5 border-0 bg-white/80 predictions-blur rounded-xl predictions-shadow">
+							  <div className="p-5 predictions-card predictions-blur">
 								<div className="flex items-center justify-between mb-4">
 									<div className="flex items-center gap-2">
 										<AlertOctagon className="w-5 h-5 text-emerald-600" />
@@ -574,7 +615,7 @@ export default function Predictions() {
 						</div>
 
 						{/* AI Recommendations */}
-						<div className="p-5 border-0 predictions-gradient rounded-xl" style={{background: 'linear-gradient(90deg,#eef2ff 0%,#f3e8ff 50%,#fce7f3 100%)'}}>
+						<div className="p-5 predictions-card predictions-gradient" style={{background: 'linear-gradient(90deg,#eef2ff 0%,#f3e8ff 50%,#fce7f3 100%)'}}>
 							<div className="flex items-center gap-2 mb-3">
 								<Sparkles className="w-5 h-5 text-indigo-600" />
 								<h3 className="font-semibold text-slate-800">AI Recommendations</h3>
